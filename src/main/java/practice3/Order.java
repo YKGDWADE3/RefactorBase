@@ -5,6 +5,9 @@ import java.util.List;
 
 public class Order {
 
+    public static final double TAX_VAL = 0.1;
+    public static final int SUBTOTAL_VALUE = 0;
+
     private List<OrderLineItem> orderLineItemList;
     private List<BigDecimal> discounts;
     private BigDecimal tax;
@@ -12,27 +15,24 @@ public class Order {
     public Order(List<OrderLineItem> orderLineItemList, List<BigDecimal> discounts) {
         this.orderLineItemList = orderLineItemList;
         this.discounts = discounts;
-        this.tax = new BigDecimal(0.1);
+        this.tax = new BigDecimal(TAX_VAL);
     }
 
     public BigDecimal calculate() {
-        BigDecimal subTotal = new BigDecimal(0);
+        PriceCaculator priceCaculator = new PriceCaculator(SUBTOTAL_VALUE);
+        BigDecimal sub = priceCaculator.getSubtotal();
 
         // Total up line items
-        for (OrderLineItem lineItem : orderLineItemList) {
-            subTotal = subTotal.add(lineItem.getPrice());
-        }
+        BigDecimal lineItem = priceCaculator.totalUpLineItems(sub, orderLineItemList);
 
         // Subtract discounts
-        for (BigDecimal discount : discounts) {
-            subTotal = subTotal.subtract(discount);
-        }
+        BigDecimal subTotal = priceCaculator.subtractDiscounts(lineItem, discounts);
 
         // calculate tax
-        BigDecimal tax = subTotal.multiply(this.tax);
+        BigDecimal taxTotal = priceCaculator.calculateTax(subTotal, tax);
 
         // calculate GrandTotal
-        BigDecimal grandTotal = subTotal.add(tax);
+        BigDecimal grandTotal = priceCaculator.calculateGrandTotal(subTotal, taxTotal);
 
         return grandTotal;
     }
